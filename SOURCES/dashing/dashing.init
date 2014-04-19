@@ -1,0 +1,108 @@
+#!/bin/bash
+# chkconfig: 2345 55 25
+# Dashing service
+### BEGIN INIT INFO
+# Provides:          dashing
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start daemon at boot time
+# Description:       Enable service provided by daemon.
+# pidfile:       /var/run/dashing/dashing.pid
+### END INIT INFO
+
+# Source function library
+. /etc/rc.d/init.d/functions
+
+
+# setup variables for use in script 
+prog=dashing
+DASHING_DIR=/opt/dashing
+PIDFILE=$DASHING_DIR/tmp/pids/thin.pid
+lockfile=/var/lock/subsys/$prog
+
+# set path to include SCL ruby
+# . /opt/rh/ruby193/enable
+export PATH=/opt/rh/ruby193/root/usr/bin${PATH:+:${PATH}}
+export LD_LIBRARY_PATH=/opt/rh/ruby193/root/usr/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+
+# store dashing pid in $PID, else empty string
+if [ -f $PIDFILE ]; then
+  PID=$(<"$PIDFILE")
+  else echo ""
+fi
+
+start() {
+
+  # check for existing PID (it should be removed with clean server shutdown)
+  if [ -f $PIDFILE ]; then
+   echo "Cannot start $prog! Existing or stale  pid $PID in $PIDFILE"
+   exit 1
+  fi
+
+  # check for existing subsys lock (it should be removed with clean server shutdown!)
+  if [ -f $lockfile ]; then
+   echo "Cannot start $prog! subsys locked!"
+   exit 2
+  fi
+
+  echo -n $"Starting $prog: "
+  cd $DASHING_DIR && daemon --user dashing bundle exec \"thin -R config.ru start -p 3030 -d\" 
+  retval=$?
+  echo
+  [ $retval -eq 0 ] && touch $lockfile
+  return $retval
+}
+
+stop() {
+  echo -n $"Stopping $prog: "
+  cd $DASHING_DIR && bundle exec thin stop
+  retval=$?
+  echo
+  [ $retval -eq 0 ] && rm -f $lockfile
+  return $retval
+}
+
+logs() {
+  tail -n 100 $DASHING_DIR/log/thin.log
+}
+
+restart() {
+    stop
+    start
+}
+
+rh_status() {
+    # run checks to determine if the service is running or use generic status
+    status -p $PIDFILE $prog
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart}"
+        exit 2
+esac
+exit $?
