@@ -56,3 +56,9 @@ Config Tweaks
 - add additional *dashboards/jobs/widgets*
 
 
+Additional InfoLinks
+---------------------
+- [Shopify Widget Listing](https://github.com/Shopify/dashing/wiki/Additional-Widgets)
+- [saltmines dashboard examples](https://github.com/TheSaltMines/dashboard)
+- [Progress Bar Widget](https://gist.github.com/mdirienzo/6716905)
+- [My Customized Dashboard](http://i.imgur.com/RBHK9XB.png)
