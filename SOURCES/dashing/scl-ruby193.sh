@@ -1,1 +1,0 @@
-source /opt/rh/ruby193/enable

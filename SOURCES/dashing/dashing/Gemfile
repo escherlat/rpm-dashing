@@ -1,5 +1,0 @@
-source 'http://rubygems.org'
-
-gem 'dashing'
-gem 'therubyracer'
-gem 'nagiosharder'
